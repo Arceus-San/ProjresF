@@ -15,53 +15,49 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
+import java.util.Scanner;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import static projetreseau.CleAES.readKey;
-
 
 public class ClientTCP {
 
-   public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException {
-        // TODO Auto-generated method stub
-        SecretKey skey = readKey();
-        Cipher cipher = Cipher.getInstance("AES");
+    public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException {
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Veuillez rentrer l'IP (127.0.0.1) : ");
+        String IP = sc.nextLine();
+        System.out.println("Vous avez rentré votre adresse IP");
+        System.out.println();
+        System.out.println("Veuillez rentrer le port (4444) : ");
+        int port = Integer.parseInt(sc.nextLine());
+        System.out.println("Vous avez rentré votre port");
+        System.out.println("Vous pouvez commencer à chatter");
+
         Socket echoSocket;
         BufferedReader in;
         PrintWriter out;
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
         try {
-
-            echoSocket = new Socket("127.0.0.1",5000);
+            echoSocket = new Socket(IP, port);
             out = new PrintWriter(echoSocket.getOutputStream());
             in = new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
 
             Thread envoyer = new Thread(new Runnable() {
                 String msg;
+
                 @Override
                 public void run() {
                     try {
-                        while(true){
+                        while (true) {
                             msg = stdIn.readLine();
-                            cipher.init(Cipher.ENCRYPT_MODE, skey);
-                            byte[] data = msg.getBytes();
-                            byte[] result = cipher.doFinal(data);
-                            System.out.println("result: "+new String(result));
-                            out.println(data);
-                            System.out.println("echo : "+msg);
+                            out.println(msg);
+                            System.out.println("Client : " + msg);
                             out.flush();
                         }
-                    }catch(IOException e){
+                    } catch (IOException e) {
                         e.printStackTrace();
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -70,39 +66,36 @@ public class ClientTCP {
 
             Thread recevoir = new Thread(new Runnable() {
                 String msg;
+
                 @Override
                 public void run() {
-                   try {
-                     msg = in.readLine();
-                     while(msg!=null){
-                        if(msg.equals("bye")){
-                            break;
-                        }
-                        cipher.init(Cipher.DECRYPT_MODE, skey);
-                        byte[] original = cipher.doFinal(msg.getBytes());
-                        System.out.println("Decrypted data: "+new String(original));
-                        System.out.println("Serveur : "+msg);
+                    try {
                         msg = in.readLine();
-                     }
-                     System.out.println("Serveur déconnecté");
-                     out.close();
-                     echoSocket.close();
-                   } catch(IOException e){
+                        while (msg != null) {
+                            if (msg.equals("bye")) {
+                                break;
+                            }
+                            System.out.println("Serveur :" + msg);
+                            msg = in.readLine();
+                        }
+                        System.out.println("Serveur déconnecté");
+                        out.close();
+                        echoSocket.close();
+                    } catch (IOException e) {
                         e.printStackTrace();
-                    } catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
             });
             recevoir.start();
 
-        } catch (UnknownHostException e){
-                System.err.println("Don't know about host: 10.163.6.2.8 ");
-                System.exit(1);
+        } catch (UnknownHostException e) {
+            System.err.println("Don't know about host: " + IP);
+            System.exit(1);
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection to  : " + IP);
+            System.exit(1);
         }
-        catch(IOException e){
-                System.err.println("Couldn't get I/O for the connection to : 10.163.6.2 ");
-                System.exit(1);
-        }
-}
+    }
 }

@@ -54,9 +54,10 @@ public class CleAES {
 
             byte[] data = "Hello World!".getBytes();
             System.out.println("data: "+new String(data));
+            String b = (new String(data));
+            System.out.println(b.getClass());
             byte[] result = cipher.doFinal(data);
-            System.out.println("result: "+new String(result));
-            System.out.println("result: "+new String(result));
+            System.out.println("result: "+result);
             
             SecretKey skey = readKey();
             
